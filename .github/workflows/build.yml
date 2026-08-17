@@ -103,7 +103,23 @@ jobs:
           set -euo pipefail
           APK=$(find "$PROJECT_ROOT" -path '*/outputs/apk/debug/*.apk' | head -n 1)
           cp "$APK" mangalicht-debug.apk
-          ls -lh mangalicht-debug.apk
+          BYTES=$(stat -c%s mangalicht-debug.apk)
+          MB=$(awk "BEGIN{printf \"%.2f\", $BYTES/1048576}")
+          echo "APK: ${MB} MB (${BYTES} bytes)"
+          {
+            echo "## APK собран"
+            echo ""
+            echo "| Параметр | Значение |"
+            echo "|---|---|"
+            echo "| Размер | **${MB} MB** |"
+            echo "| Байт | ${BYTES} |"
+            echo ""
+            echo "### Крупнейшее содержимое"
+            echo ""
+            echo '```'
+            unzip -l mangalicht-debug.apk | sort -rn -k1 | head -n 15
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload APK
         if: steps.build.outcome == 'success'
